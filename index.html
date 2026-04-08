@@ -3,82 +3,62 @@
 <head>
   <meta charset="UTF-8" />
   <title>Radioworks Premium Player</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    body {
+    * {
+      box-sizing: border-box;
       margin: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+        "Segoe UI", sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       background: transparent;
       color: #fff;
     }
 
-    .unlicensed {
+    .player-shell {
       display: flex;
-      align-items: center;
       justify-content: center;
-      text-align: center;
-      background: #000;
-      color: #fff;
       width: 100%;
-      height: 100vh;
-      padding: 10px;
-      box-sizing: border-box;
-      font-size: 14px;
     }
 
-    /* Player wrapper */
-    .player {
+    .player-card {
       display: flex;
       align-items: center;
-      padding: 14px;
-      box-sizing: border-box;
+      gap: 16px;
+      padding: 16px 18px;
+      border-radius: 18px;
+      background: rgba(15, 15, 20, 0.7);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      max-width: 420px;
       width: 100%;
-      height: 100vh;
-      position: relative;
-      border-radius: 14px;
-    }
-
-    /* Alignment */
-    .align-left { justify-content: flex-start; }
-    .align-center { justify-content: center; }
-    .align-right { justify-content: flex-end; }
-
-    /* Themes */
-    .theme-dark {
-      background: rgba(255, 255, 255, 0.12);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.25);
       color: #fff;
     }
-    .theme-dark .track { color: #fff; }
-    .theme-dark .artist { color: #ddd; }
-    .theme-dark .footer { color: rgba(255, 255, 255, 0.7); }
-    .theme-dark .footer a { color: rgba(255, 255, 255, 0.9); }
 
-    .theme-light {
-      background: rgba(255, 255, 255, 0.55);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      border: 1px solid rgba(0, 0, 0, 0.15);
-      color: #000;
-    }
-    .theme-light .track { color: #000; }
-    .theme-light .artist { color: #333; }
-    .theme-light .footer { color: rgba(0, 0, 0, 0.6); }
-    .theme-light .footer a { color: rgba(0, 0, 0, 0.8); }
-    .theme-light .play-btn {
-      background: #1db954;
-      color: #000;
+    .player-card.light {
+      background: rgba(255, 255, 255, 0.7);
+      color: #111;
+      border-color: rgba(0, 0, 0, 0.06);
     }
 
     .artwork {
-      width: 80px;
-      height: 80px;
-      background: #333;
-      border-radius: 6px;
+      width: 72px;
+      height: 72px;
+      border-radius: 14px;
       overflow: hidden;
       flex-shrink: 0;
-      margin-right: 12px;
+      background: #222;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .artwork img {
@@ -86,368 +66,504 @@
       height: 100%;
       object-fit: cover;
       display: block;
-      opacity: 1;
-      transition: opacity 0.5s ease;
-    }
-    .artwork img.fade-out {
-      opacity: 0;
     }
 
-    .info {
+    .meta {
       flex: 1;
+      min-width: 0;
       display: flex;
       flex-direction: column;
-      justify-content: center;
-      min-width: 0;
+      gap: 4px;
     }
 
-    .track,
-    .artist {
+    .now-playing-label {
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      opacity: 0.7;
+    }
+
+    .track-title {
+      font-size: 14px;
+      font-weight: 600;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
-    .track {
-      font-size: 15px;
-      font-weight: 600;
+    .track-artist {
+      font-size: 12px;
+      opacity: 0.8;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
-    .artist {
-      font-size: 13px;
-      margin-top: 2px;
-    }
-
-    .controls {
-      margin-top: 10px;
+    .controls-row {
       display: flex;
       align-items: center;
       gap: 10px;
+      margin-top: 6px;
     }
 
-    .play-btn {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
+    .play-button {
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
       border: none;
-      background: #1db954;
-      color: #000;
-      cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 16px;
+      cursor: pointer;
+      background: #ffffff;
+      color: #111;
       flex-shrink: 0;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+      transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease, color 0.12s ease;
     }
 
-    .volume {
+    .player-card.light .play-button {
+      background: #111;
+      color: #fff;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+    }
+
+    .play-button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .play-button:active {
+      transform: translateY(0);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .play-icon {
+      width: 0;
+      height: 0;
+      border-style: solid;
+      border-width: 7px 0 7px 11px;
+      border-color: transparent transparent transparent currentColor;
+      margin-left: 2px;
+    }
+
+    .pause-icon {
+      display: flex;
+      gap: 3px;
+    }
+
+    .pause-icon span {
+      width: 3px;
+      height: 12px;
+      border-radius: 999px;
+      background: currentColor;
+    }
+
+    .progress-bar {
       flex: 1;
-    }
-
-    .volume input[type="range"] {
-      width: 100%;
-    }
-
-    /* Fade for text */
-    .fade {
-      opacity: 1;
-      transition: opacity 0.4s ease;
-    }
-    .fade.hidden {
-      opacity: 0;
-    }
-
-    /* Marquee */
-    .marquee {
+      height: 4px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.12);
       overflow: hidden;
-      white-space: nowrap;
       position: relative;
     }
-    .marquee span {
-      display: inline-block;
-      padding-left: 100%;
-      animation: marquee 10s linear infinite;
-    }
-    .no-scroll span {
-      animation: none;
-      padding-left: 0;
-    }
-    @keyframes marquee {
-      0% { transform: translateX(0); }
-      100% { transform: translateX(-100%); }
+
+    .player-card.light .progress-bar {
+      background: rgba(0, 0, 0, 0.08);
     }
 
-    /* Footer */
-    .footer {
+    .progress-fill {
       position: absolute;
-      bottom: 6px;
       left: 0;
-      width: 100%;
-      text-align: center;
-      font-size: 10px;
-      pointer-events: auto;
-    }
-    .footer a {
-      text-decoration: none;
-    }
-    .footer a:hover {
-      text-decoration: underline;
+      top: 0;
+      bottom: 0;
+      width: 0%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #ff4b8b, #ffb347);
+      transition: width 0.15s linear;
     }
 
-    /* Mobile compact mode + hide volume */
-    @media (max-width: 600px) {
-      .player { padding: 10px; }
-      .artwork { width: 60px; height: 60px; }
-      .track { font-size: 14px; }
-      .artist { font-size: 12px; }
-      .volume { display: none !important; }
+    .status-text {
+      margin-top: 4px;
+      font-size: 10px;
+      opacity: 0.7;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .unlicensed-screen {
+      padding: 18px 20px;
+      border-radius: 18px;
+      background: rgba(20, 0, 0, 0.8);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid rgba(255, 80, 80, 0.5);
+      max-width: 420px;
+      width: 100%;
+      color: #ffd7d7;
+      font-size: 13px;
+    }
+
+    .unlicensed-title {
+      font-weight: 600;
+      margin-bottom: 6px;
+      font-size: 14px;
+    }
+
+    .unlicensed-sub {
+      font-size: 12px;
+      opacity: 0.85;
+    }
+
+    @media (max-width: 480px) {
+      .player-card,
+      .unlicensed-screen {
+        margin: 8px;
+      }
     }
   </style>
 </head>
 <body>
-  <div id="root"></div>
+  <div id="app"></div>
 
   <script>
-    const DEFAULT_ART = "https://i.ibb.co/zTXzXnxR/Default-Player-Artwork.png";
-    const DEFAULT_META = "RADIO STREAM";
+    const DEFAULT_ARTWORK =
+      "https://i.ibb.co/zTXzXnxR/Default-Player-Artwork.png";
+    const DEFAULT_TITLE = "Radio Stream";
+    const DEFAULT_ARTIST = "Live";
 
-    function getQueryParam(name) {
+    function getQueryParams() {
       const params = new URLSearchParams(window.location.search);
-      return params.get(name);
+      return {
+        streamUrl: params.get("streamUrl") || "",
+        metaUrl: params.get("metaUrl") || "",
+        licenseKey: params.get("licenseKey") || "",
+        theme: (params.get("theme") || "dark").toLowerCase(),
+        align: (params.get("align") || "center").toLowerCase()
+      };
     }
 
-    async function fetchJSON(url) {
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("Network error");
-      return res.json();
-    }
-
-    function normalize(str) {
-      return (str || "")
-        .toLowerCase()
-        .replace(/[^a-z0-9\s]/g, "")
-        .trim();
-    }
-
-    function scoreMatch(targetArtist, targetTrack, result) {
-      const a = normalize(targetArtist);
-      const t = normalize(targetTrack);
-      const ra = normalize(result.artistName);
-      const rt = normalize(result.trackName);
-
-      let score = 0;
-      if (a && ra) {
-        if (a === ra) score += 2;
-        else if (ra.includes(a) || a.includes(ra)) score += 1;
-      }
-      if (t && rt) {
-        if (t === rt) score += 2;
-        else if (rt.includes(t) || t.includes(rt)) score += 1;
-      }
-      return score;
-    }
-
-    async function findBestItunesArt(artist, track) {
-      if (!artist && !track) return null;
-      const term = encodeURIComponent(`${artist || ""} ${track || ""}`.trim());
-      const url = `https://itunes.apple.com/search?term=${term}&entity=song&limit=10`;
-
+    async function loadLicenses() {
       try {
-        const data = await fetchJSON(url);
-        if (!data.results || !data.results.length) return null;
-
-        let best = null;
-        let bestScore = -1;
-        for (const r of data.results) {
-          const s = scoreMatch(artist, track, r);
-          if (s > bestScore) {
-            bestScore = s;
-            best = r;
-          }
-        }
-        if (!best) return null;
-        return best.artworkUrl100.replace("100x100bb", "300x300bb");
-      } catch {
+        const res = await fetch("licenses.json", { cache: "no-store" });
+        if (!res.ok) throw new Error("Failed to load licenses.json");
+        return await res.json();
+      } catch (e) {
+        console.error("License load error:", e);
         return null;
       }
     }
 
-    async function checkLicense(licenseKey) {
-      if (!licenseKey) return false;
+    function isLicenseValid(licenses, key) {
+      if (!licenses || !licenses.validKeys || !key) return false;
+      const entry = licenses.validKeys.find((k) => k.key === key);
+      if (!entry) return false;
+      if (!entry.expires) return true;
+      const today = new Date().toISOString().slice(0, 10);
+      return entry.expires >= today;
+    }
+
+    function createUnlicensedView() {
+      const wrapper = document.createElement("div");
+      wrapper.className = "player-shell";
+
+      const card = document.createElement("div");
+      card.className = "unlicensed-screen";
+
+      const title = document.createElement("div");
+      title.className = "unlicensed-title";
+      title.textContent = "Unlicensed Player";
+
+      const sub = document.createElement("div");
+      sub.className = "unlicensed-sub";
+      sub.textContent =
+        "This embedded player is not licensed for use. Please contact the provider for a valid license key.";
+
+      card.appendChild(title);
+      card.appendChild(sub);
+      wrapper.appendChild(card);
+      return wrapper;
+    }
+
+    function createPlayerView(theme, align) {
+      const shell = document.createElement("div");
+      shell.className = "player-shell";
+      shell.style.justifyContent =
+        align === "left"
+          ? "flex-start"
+          : align === "right"
+          ? "flex-end"
+          : "center";
+
+      const card = document.createElement("div");
+      card.className = "player-card";
+      if (theme === "light") card.classList.add("light");
+
+      const artwork = document.createElement("div");
+      artwork.className = "artwork";
+      const artImg = document.createElement("img");
+      artImg.src = DEFAULT_ARTWORK;
+      artImg.alt = "Artwork";
+      artwork.appendChild(artImg);
+
+      const meta = document.createElement("div");
+      meta.className = "meta";
+
+      const nowLabel = document.createElement("div");
+      nowLabel.className = "now-playing-label";
+      nowLabel.textContent = "Now Playing";
+
+      const titleEl = document.createElement("div");
+      titleEl.className = "track-title";
+      titleEl.textContent = DEFAULT_TITLE;
+
+      const artistEl = document.createElement("div");
+      artistEl.className = "track-artist";
+      artistEl.textContent = DEFAULT_ARTIST;
+
+      const controlsRow = document.createElement("div");
+      controlsRow.className = "controls-row";
+
+      const playBtn = document.createElement("button");
+      playBtn.className = "play-button";
+      const playIcon = document.createElement("div");
+      playIcon.className = "play-icon";
+      playBtn.appendChild(playIcon);
+
+      const progressBar = document.createElement("div");
+      progressBar.className = "progress-bar";
+      const progressFill = document.createElement("div");
+      progressFill.className = "progress-fill";
+      progressBar.appendChild(progressFill);
+
+      controlsRow.appendChild(playBtn);
+      controlsRow.appendChild(progressBar);
+
+      const statusText = document.createElement("div");
+      statusText.className = "status-text";
+      statusText.textContent = "Ready";
+
+      meta.appendChild(nowLabel);
+      meta.appendChild(titleEl);
+      meta.appendChild(artistEl);
+      meta.appendChild(controlsRow);
+      meta.appendChild(statusText);
+
+      card.appendChild(artwork);
+      card.appendChild(meta);
+      shell.appendChild(card);
+
+      return {
+        root: shell,
+        artImg,
+        titleEl,
+        artistEl,
+        playBtn,
+        playIcon,
+        progressFill,
+        statusText
+      };
+    }
+
+    function parseShoutcastXml(text) {
       try {
-        const licenses = await fetchJSON("licenses.json");
-        const now = new Date();
-        const match = (licenses.validKeys || []).find(k => k.key === licenseKey);
-        if (!match) return false;
-        if (match.expires) {
-          const exp = new Date(match.expires);
-          if (isNaN(exp.getTime()) || exp < now) return false;
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(text, "text/xml");
+        const songNode =
+          doc.querySelector("SONGTITLE") ||
+          doc.querySelector("songtitle") ||
+          doc.querySelector("title");
+        if (!songNode || !songNode.textContent) return null;
+        const raw = songNode.textContent.trim();
+        if (!raw) return null;
+
+        let artist = "";
+        let title = raw;
+        const dashIndex = raw.indexOf(" - ");
+        if (dashIndex > 0) {
+          artist = raw.slice(0, dashIndex).trim();
+          title = raw.slice(dashIndex + 3).trim();
         }
-        return true;
-      } catch {
-        return false;
+
+        return {
+          artist: artist || "",
+          title: title || raw
+        };
+      } catch (e) {
+        console.error("XML parse error:", e);
+        return null;
       }
     }
 
-    function applyMarquee(el) {
-      const span = el.querySelector("span");
-      if (!span) return;
-      el.classList.add("no-scroll");
-      setTimeout(() => {
-        if (span.scrollWidth > el.clientWidth) {
-          el.classList.remove("no-scroll");
+    async function fetchMetadata(metaUrl) {
+      if (!metaUrl) return null;
+      try {
+        const res = await fetch(metaUrl + (metaUrl.includes("?") ? "&" : "?") + "t=" + Date.now(), {
+          cache: "no-store"
+        });
+        const contentType = res.headers.get("content-type") || "";
+        const text = await res.text();
+
+        if (contentType.includes("application/json")) {
+          try {
+            const json = JSON.parse(text);
+            const artist =
+              json.artist || json.Artist || json.artist_name || "";
+            const title =
+              json.title || json.Title || json.track || json.song || "";
+            return { artist, title };
+          } catch {
+            // fall through to XML parsing
+          }
         }
-      }, 50);
+
+        return parseShoutcastXml(text);
+      } catch (e) {
+        console.error("Metadata fetch error:", e);
+        return null;
+      }
     }
 
-    (async function init() {
-      const root = document.getElementById("root");
-
-      const streamUrl = getQueryParam("streamUrl");
-      const metaUrl = getQueryParam("metaUrl");
-      const licenseKey = getQueryParam("licenseKey");
-      const theme = (getQueryParam("theme") || "dark").toLowerCase();
-      const align = (getQueryParam("align") || "left").toLowerCase();
-
-      const licensed = await checkLicense(licenseKey);
-
-      if (!licensed) {
-        root.innerHTML = `
-          <div class="unlicensed">
-            <div>
-              <strong>This Premium Radio Player from Radioworks is unlicensed.</strong><br/>
-              To obtain a valid license please visit <strong>radioworks.studio</strong>.
-            </div>
-          </div>
-        `;
-        return;
+    async function fetchArtwork(artist, title) {
+      if (!artist && !title) return null;
+      try {
+        const query = encodeURIComponent(`${artist} ${title}`.trim());
+        const res = await fetch(
+          `https://itunes.apple.com/search?term=${query}&entity=song&limit=1`
+        );
+        if (!res.ok) return null;
+        const data = await res.json();
+        if (!data.results || !data.results.length) return null;
+        const art = data.results[0].artworkUrl100 || "";
+        if (!art) return null;
+        return art.replace("100x100bb", "300x300bb");
+      } catch (e) {
+        console.error("Artwork fetch error:", e);
+        return null;
       }
+    }
 
+    function setupAudio(streamUrl, ui) {
       if (!streamUrl) {
-        root.innerHTML = `
-          <div class="unlicensed">
-            <div>No stream URL configured. Please provide a valid <strong>streamUrl</strong> parameter.</div>
-          </div>
-        `;
+        ui.statusText.textContent =
+          "No stream URL configured. Please provide a valid streamUrl parameter.";
+        ui.playBtn.disabled = true;
+        ui.playBtn.style.opacity = "0.6";
         return;
       }
-
-      root.innerHTML = `
-        <div class="player">
-          <div class="artwork">
-            <img id="artworkImg" src="${DEFAULT_ART}" alt="Album Art" />
-          </div>
-          <div class="info">
-            <div class="track fade marquee" id="trackName"><span>${DEFAULT_META}</span></div>
-            <div class="artist fade marquee" id="artistName"><span></span></div>
-            <div class="controls">
-              <button class="play-btn" id="playBtn">▶</button>
-              <div class="volume">
-                <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="0.8" />
-              </div>
-            </div>
-          </div>
-          <div class="footer">
-            Powered by <a href="https://radioworks.studio" target="_blank">Radioworks</a>
-          </div>
-        </div>
-      `;
-
-      const playerEl = document.querySelector(".player");
-      if (theme === "light") playerEl.classList.add("theme-light");
-      else playerEl.classList.add("theme-dark");
-
-      if (align === "center") playerEl.classList.add("align-center");
-      else if (align === "right") playerEl.classList.add("align-right");
-      else playerEl.classList.add("align-left");
 
       const audio = new Audio(streamUrl);
-      audio.volume = 0.8;
       audio.preload = "none";
 
-      const playBtn = document.getElementById("playBtn");
-      const volumeSlider = document.getElementById("volumeSlider");
-      const trackNameEl = document.getElementById("trackName");
-      const artistNameEl = document.getElementById("artistName");
-      const artworkImg = document.getElementById("artworkImg");
+      let isPlaying = false;
+      let progress = 0;
+      let progressTimer = null;
 
-      playBtn.addEventListener("click", async () => {
-        if (audio.paused) {
+      function setPlayIcon() {
+        ui.playBtn.innerHTML = "";
+        const icon = document.createElement("div");
+        icon.className = "play-icon";
+        ui.playBtn.appendChild(icon);
+      }
+
+      function setPauseIcon() {
+        ui.playBtn.innerHTML = "";
+        const icon = document.createElement("div");
+        icon.className = "pause-icon";
+        const bar1 = document.createElement("span");
+        const bar2 = document.createElement("span");
+        icon.appendChild(bar1);
+        icon.appendChild(bar2);
+        ui.playBtn.appendChild(icon);
+      }
+
+      setPlayIcon();
+
+      function startProgress() {
+        if (progressTimer) return;
+        progressTimer = setInterval(() => {
+          progress = (progress + 1) % 100;
+          ui.progressFill.style.width = progress + "%";
+        }, 800);
+      }
+
+      function stopProgress() {
+        if (progressTimer) {
+          clearInterval(progressTimer);
+          progressTimer = null;
+        }
+        ui.progressFill.style.width = "0%";
+        progress = 0;
+      }
+
+      ui.playBtn.addEventListener("click", async () => {
+        if (!isPlaying) {
           try {
+            ui.statusText.textContent = "Connecting…";
             await audio.play();
-            playBtn.textContent = "⏸";
-          } catch {}
+            isPlaying = true;
+            setPauseIcon();
+            ui.statusText.textContent = "Live";
+            startProgress();
+          } catch (e) {
+            console.error("Play error:", e);
+            ui.statusText.textContent = "Playback failed.";
+          }
         } else {
           audio.pause();
-          playBtn.textContent = "▶";
+          isPlaying = false;
+          setPlayIcon();
+          ui.statusText.textContent = "Paused";
+          stopProgress();
         }
       });
 
-      volumeSlider.addEventListener("input", () => {
-        audio.volume = parseFloat(volumeSlider.value);
+      audio.addEventListener("error", () => {
+        ui.statusText.textContent = "Stream error.";
       });
+    }
 
-      async function updateMetadata() {
-        if (!metaUrl) {
-          trackNameEl.querySelector("span").textContent = DEFAULT_META;
-          artistNameEl.querySelector("span").textContent = "";
-          artworkImg.src = DEFAULT_ART;
-          applyMarquee(trackNameEl);
-          applyMarquee(artistNameEl);
+    async function init() {
+      const params = getQueryParams();
+      const app = document.getElementById("app");
+
+      const licenses = await loadLicenses();
+      const valid = isLicenseValid(licenses, params.licenseKey);
+
+      if (!valid) {
+        app.appendChild(createUnlicensedView());
+        return;
+      }
+
+      const ui = createPlayerView(params.theme, params.align);
+      app.appendChild(ui.root);
+
+      setupAudio(params.streamUrl, ui);
+
+      async function updateMeta() {
+        const meta = await fetchMetadata(params.metaUrl);
+        if (!meta || (!meta.artist && !meta.title)) {
+          ui.titleEl.textContent = DEFAULT_TITLE;
+          ui.artistEl.textContent = DEFAULT_ARTIST;
+          ui.statusText.textContent = "Live";
+          ui.artImg.src = DEFAULT_ARTWORK;
           return;
         }
 
-        try {
-          const meta = await fetchJSON(metaUrl);
+        ui.titleEl.textContent = meta.title || DEFAULT_TITLE;
+        ui.artistEl.textContent = meta.artist || DEFAULT_ARTIST;
+        ui.statusText.textContent = "Live";
 
-          const artist = meta.artist || meta.artistName || "";
-          const title = meta.title || meta.track || meta.song || "";
-
-          const finalTitle = title || DEFAULT_META;
-          const finalArtist = artist || "";
-
-          const elements = [trackNameEl, artistNameEl, artworkImg];
-          elements.forEach(el => el.classList.add("hidden"));
-
-          setTimeout(async () => {
-            trackNameEl.querySelector("span").textContent = finalTitle;
-            artistNameEl.querySelector("span").textContent = finalArtist;
-
-            applyMarquee(trackNameEl);
-            applyMarquee(artistNameEl);
-
-            let art = meta.artwork || meta.cover || meta.image || null;
-
-            if (!art && artist && title) {
-              art = await findBestItunesArt(artist, title);
-            }
-
-            if (!art) art = DEFAULT_ART;
-
-            artworkImg.classList.add("fade-out");
-            setTimeout(() => {
-              artworkImg.src = art;
-              artworkImg.onload = () => {
-                artworkImg.classList.remove("fade-out");
-              };
-            }, 300);
-
-            elements.forEach(el => el.classList.remove("hidden"));
-          }, 400);
-
-        } catch {
-          trackNameEl.querySelector("span").textContent = DEFAULT_META;
-          artistNameEl.querySelector("span").textContent = "";
-          artworkImg.src = DEFAULT_ART;
-
-          applyMarquee(trackNameEl);
-          applyMarquee(artistNameEl);
-        }
+        const art = await fetchArtwork(meta.artist, meta.title);
+        ui.artImg.src = art || DEFAULT_ARTWORK;
       }
 
-      updateMetadata();
-      if (metaUrl) setInterval(updateMetadata, 15000);
-    })();
+      updateMeta();
+      setInterval(updateMeta, 15000);
+    }
+
+    init();
   </script>
 </body>
 </html>
