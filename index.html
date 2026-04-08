@@ -1,566 +1,483 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8" />
-  <title>Radioworks Player</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Radioworks Premium Player - Widget</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
-        "Segoe UI", sans-serif;
+    :root {
+      --text: #fff;
+      --subtext: rgba(255,255,255,0.7);
+      --glass: rgba(0,0,0,0.25);
+      --title-color: #fff;
+      --slider-track: linear-gradient(90deg, #ffffff 0%, #d0d0d0 100%);
+      --slider-thumb: #ffffff;
+      --slider-thumb-glow: rgba(255,255,255,0.6);
     }
+
+    /* ----------------------------- */
+    /* THEMES                       */
+    /* ----------------------------- */
+
+    /* LIGHT (default) */
+    .theme-light {
+      --text: #ffffff;
+      --subtext: rgba(255,255,255,0.7);
+      --glass: rgba(255,255,255,0.15);
+      --title-color: #ffffff;
+      --slider-track: linear-gradient(90deg, #ffffff 0%, #d0d0d0 100%);
+      --slider-thumb: #ffffff;
+      --slider-thumb-glow: rgba(255,255,255,0.6);
+    }
+
+    /* DARK */
+    .theme-dark {
+      --text: #000000;
+      --subtext: rgba(0,0,0,0.6);
+      --glass: rgba(255,255,255,0.25);
+      --title-color: #000000;
+      --slider-track: linear-gradient(90deg, #444 0%, #222 100%);
+      --slider-thumb: #000000;
+      --slider-thumb-glow: rgba(0,0,0,0.4);
+    }
+
+    .theme-dark .widget-wrap {
+      background: rgba(255,255,255,0.4);
+    }
+
+    /* RETRO */
+    .theme-retro {
+      --text: #3b2f2f;
+      --subtext: rgba(59,47,47,0.7);
+      --glass: rgba(222,184,135,0.35);
+      --title-color: #3b2f2f;
+      --slider-track: linear-gradient(90deg, #a67c52 0%, #8b5e34 100%);
+      --slider-thumb: #5c3d2e;
+      --slider-thumb-glow: rgba(92,61,46,0.4);
+    }
+
+    .theme-retro .widget-wrap {
+      background: rgba(222,184,135,0.45);
+      border: 2px solid #8b5e34;
+      border-radius: 16px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+    }
+
+    .theme-retro .art-wrap {
+      border-radius: 4px;
+      box-shadow: 0 6px 14px rgba(0,0,0,0.5);
+    }
+
+    .theme-retro .play-btn {
+      background: #8b5e34;
+      color: #fff;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+    }
+
+    /* ----------------------------- */
+    /* ORIGINAL STYLES              */
+    /* ----------------------------- */
 
     body {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      margin: 0;
+      padding: 0;
+      font-family: "Montserrat", system-ui, sans-serif;
       background: transparent;
-      color: #fff;
-    }
-
-    .player-wrap {
-      display: flex;
-      justify-content: center;
-      width: 100%;
-    }
-
-    .player-card {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      padding: 14px 16px;
-      border-radius: 14px;
-      background: rgba(10, 10, 15, 0.9);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      max-width: 380px;
-      width: 100%;
-      color: #fff;
-    }
-
-    .player-card.light {
-      background: rgba(245, 245, 245, 0.96);
-      color: #111;
-      border-color: rgba(0, 0, 0, 0.06);
-    }
-
-    .artwork {
-      width: 64px;
-      height: 64px;
-      border-radius: 10px;
       overflow: hidden;
-      flex-shrink: 0;
-      background: #222;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      color: var(--text);
     }
 
-    .artwork img {
+    .widget-wrap {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 18px;
+      padding: 12px 16px;
+      background: var(--glass);
+      backdrop-filter: blur(12px);
+      border-radius: 12px;
+      max-width: 480px;
+      margin: 0;
+    }
+
+    .align-left { margin-right: auto; }
+    .align-center { margin-left: auto; margin-right: auto; }
+    .align-right { margin-left: auto; }
+
+    .art-wrap {
+      width: 150px;
+      height: 150px;
+      border-radius: 12px;
+      overflow: hidden;
+      position: relative;
+      flex-shrink: 0;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+    }
+
+    .art-img {
       width: 100%;
       height: 100%;
       object-fit: cover;
-      display: block;
+      transition: opacity 0.4s ease;
     }
 
-    .meta {
-      flex: 1;
-      min-width: 0;
+    .art-img.fade { opacity: 0; }
+
+    .fallback-chip { display: none; }
+
+    .meta-wrap {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      justify-content: center;
+      gap: 6px;
+      flex: 1;
+      min-width: 0;
     }
 
-    .now-playing-label {
+    .onair-label {
       font-size: 10px;
-      letter-spacing: 0.16em;
+      font-weight: 600;
+      letter-spacing: 0.28em;
       text-transform: uppercase;
-      opacity: 0.7;
+      color: var(--subtext);
     }
+
+    .onair-label span { color: #ff9c35; }
 
     .track-title {
-      font-size: 14px;
-      font-weight: 600;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      font-size: 16px;
+      font-weight: 700;
+      text-transform: uppercase;
+      line-height: 1.2;
+      word-break: break-word;
+      color: var(--title-color);
     }
 
-    .track-artist {
+    .track-sub {
       font-size: 12px;
-      opacity: 0.8;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      color: var(--subtext);
     }
 
-    .controls-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-top: 6px;
-    }
-
-    .play-button {
-      width: 32px;
-      height: 32px;
-      border-radius: 999px;
-      border: none;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      background: #ffffff;
-      color: #111;
-      flex-shrink: 0;
-      font-size: 0;
-      transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease, color 0.12s ease;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
-    }
-
-    .player-card.light .play-button {
-      background: #111;
-      color: #fff;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
-    }
-
-    .play-button:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.4);
-    }
-
-    .play-button:active {
-      transform: translateY(0);
-      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
-    }
-
-    .play-icon {
-      width: 0;
-      height: 0;
-      border-style: solid;
-      border-width: 7px 0 7px 11px;
-      border-color: transparent transparent transparent currentColor;
-      margin-left: 2px;
-    }
-
-    .pause-icon {
-      display: flex;
-      gap: 3px;
-    }
-
-    .pause-icon span {
-      width: 3px;
-      height: 12px;
-      border-radius: 999px;
-      background: currentColor;
-    }
-
-    .progress-bar {
-      flex: 1;
-      height: 3px;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.16);
-      overflow: hidden;
-      position: relative;
-    }
-
-    .player-card.light .progress-bar {
-      background: rgba(0, 0, 0, 0.08);
-    }
-
-    .progress-fill {
-      position: absolute;
-      left: 0;
-      top: 0;
-      bottom: 0;
-      width: 0%;
-      border-radius: inherit;
-      background: #ffffff;
-      opacity: 0.9;
-      transition: width 0.15s linear;
-    }
-
-    .status-text {
-      margin-top: 3px;
-      font-size: 10px;
-      opacity: 0.7;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .unlicensed {
-      padding: 14px 16px;
-      border-radius: 14px;
-      background: rgba(30, 0, 0, 0.95);
-      border: 1px solid rgba(255, 80, 80, 0.6);
-      max-width: 380px;
+    .play-btn {
       width: 100%;
-      color: #ffd7d7;
+      max-width: 120px;
+      height: 36px;
+      border-radius: 8px;
       font-size: 13px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      background: #fff;
+      color: #000;
+      box-shadow: 0 6px 14px rgba(0,0,0,0.3);
     }
 
-    .unlicensed-title {
+    .volume-wrap { width: 100%; max-width: 160px; }
+
+    .volume-bar {
+      width: 100%;
+      height: 6px;
+      border-radius: 999px;
+      cursor: pointer;
+      background: var(--slider-track);
+      outline: none;
+      border: none;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    .volume-bar::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--slider-thumb);
+      margin-top: -4px;
+      transition: box-shadow 0.15s ease, transform 0.15s ease;
+    }
+
+    .volume-bar::-webkit-slider-thumb:hover {
+      box-shadow: 0 0 0 6px var(--slider-thumb-glow);
+      transform: scale(1.05);
+    }
+
+    .powered-by {
+      margin-top: 6px;
+      font-size: 11px;
+      opacity: 0.85;
+    }
+
+    .powered-by a {
+      color: #4da3ff;
+      text-decoration: underline;
       font-weight: 600;
-      margin-bottom: 4px;
-      font-size: 14px;
+      cursor: pointer;
     }
 
-    .unlicensed-sub {
-      font-size: 12px;
-      opacity: 0.9;
+    @media (max-width: 1024px) { .volume-wrap { display: none; } }
+
+    @media (max-width: 480px) {
+      .widget-wrap { flex-direction: column; max-width: 100%; padding: 16px; }
+      .art-wrap { width: 180px; height: 180px; }
+      .meta-wrap { align-items: center; text-align: center; }
     }
 
-    @media (max-width: 420px) {
-      .player-card,
-      .unlicensed {
-        margin: 6px;
-      }
+    @media screen and (min-width: 1025px) {
+      .volume-wrap { display: block !important; }
     }
   </style>
 </head>
+
 <body>
-  <div id="app"></div>
 
-  <script>
-    const DEFAULT_ARTWORK = "https://i.ibb.co/zTXzXnxR/Default-Player-Artwork.png";
-    const DEFAULT_TITLE = "Radio Stream";
-    const DEFAULT_ARTIST = "Live";
+<div class="widget-wrap" id="playerArea">
 
-    function getQueryParams() {
-      const params = new URLSearchParams(window.location.search);
-      return {
-        streamUrl: params.get("streamUrl") || "",
-        metaUrl: params.get("metaUrl") || "",
-        licenseKey: params.get("licenseKey") || "",
-        theme: (params.get("theme") || "dark").toLowerCase(),
-        align: (params.get("align") || "center").toLowerCase()
-      };
+  <div class="art-wrap">
+    <img id="artwork" class="art-img" src="" alt="">
+    <div id="fallbackChip" class="fallback-chip">NO ARTWORK</div>
+  </div>
+
+  <div class="meta-wrap">
+    <div class="onair-label"><span>●</span> NOW PLAYING</div>
+
+    <div id="trackTitle" class="track-title">Loading…</div>
+    <div id="trackSub" class="track-sub"></div>
+
+    <button id="playButton" class="play-btn">PLAY</button>
+
+    <div class="volume-wrap">
+      <input id="volumeBar" class="volume-bar" type="range" min="0" max="100" value="100">
+    </div>
+
+    <div class="powered-by">
+      <a href="https://radioworks.stuio" target="_blank">Powered by Radioworks</a>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const streamURL = params.get("stream");
+const metaURL = params.get("meta");
+const licenseKey = params.get("license");
+const align = params.get("align") || "center";
+const theme = params.get("theme") || "light";
+
+/* Apply theme */
+document.body.classList.add(`theme-${theme}`);
+
+const licenseURL = "https://raw.githubusercontent.com/radioworks01/premium-radio-player-widget/main/licenses.json";
+
+async function checkLicense() {
+  try {
+    const res = await fetch(licenseURL + "?_=" + Date.now());
+    const data = await res.json();
+
+    if (!data.licenses || !Array.isArray(data.licenses)) return showInvalid("data");
+
+    const license = data.licenses.find(l => l.key === licenseKey);
+    if (!license) return showInvalid("invalid");
+
+    if (license.expires !== "never") {
+      const today = new Date();
+      const expiry = new Date(license.expires);
+      if (today > expiry) return showInvalid("expired");
     }
 
-    async function loadLicenses() {
-      try {
-        const res = await fetch("licenses.json", { cache: "no-store" });
-        if (!res.ok) throw new Error("Failed to load licenses.json");
-        return await res.json();
-      } catch (e) {
-        console.error("License load error:", e);
-        return null;
-      }
+    return true;
+
+  } catch {
+    return showInvalid("data");
+  }
+}
+
+function showInvalid(reason) {
+  let title = "";
+  let message = "";
+
+  if (reason === "expired") {
+    title = "License Expired";
+    message = `The license for the Radioworks Premium Player has expired. Renew your licence at 
+      <a href="https://radioworks.studio" target="_blank" style="color:#4da3ff;">radioworks.studio</a>.`;
+  } else {
+    title = "Invalid License";
+    message = "This Radioworks Premium Player is not licensed.";
+  }
+
+  document.getElementById("playerArea").innerHTML = `
+    <div style="width:100%;text-align:center;padding:40px 20px;color:#fff;">
+      <h1 style="font-size:24px;margin-bottom:10px;">${title}</h1>
+      <p style="font-size:14px;opacity:0.7;">${message}</p>
+    </div>
+  `;
+
+  return false;
+}
+
+function initPlayer() {
+  const audio = new Audio(streamURL);
+  const playButton = document.getElementById("playButton");
+  const volumeBar = document.getElementById("volumeBar");
+  const titleEl = document.getElementById("trackTitle");
+  const subEl = document.getElementById("trackSub");
+  const artworkEl = document.getElementById("artwork");
+  const fallbackChip = document.getElementById("fallbackChip");
+
+  const FALLBACK_ART = "https://i.ibb.co/Jj588RKm/Live-Stream-Default-Album-Art.png";
+
+  let lastSentTitle = "";
+  let lastSentArtist = "";
+  let lastSentArt = "";
+
+  document.getElementById("playerArea").classList.add(`align-${align}`);
+
+  artworkEl.src = FALLBACK_ART;
+  fallbackChip.style.display = "none";
+
+  playButton.addEventListener("click", () => {
+    if (audio.paused) {
+      audio.play();
+      playButton.textContent = "PAUSE";
+    } else {
+      audio.pause();
+      playButton.textContent = "PLAY";
+    }
+  });
+
+  audio.volume = volumeBar ? volumeBar.value / 100 : 1.0;
+
+  if (volumeBar) {
+    volumeBar.addEventListener("input", () => {
+      audio.volume = volumeBar.value / 100;
+    });
+  }
+
+  function sendHistoryUpdate(title, artist, artUrl) {
+    if (!title) return;
+
+    if (
+      title === lastSentTitle &&
+      artist === lastSentArtist &&
+      artUrl === lastSentArt
+    ) {
+      return;
     }
 
-    function isLicenseValid(licenses, key) {
-      if (!licenses || !licenses.validKeys || !key) return false;
-      const entry = licenses.validKeys.find((k) => k.key === key);
-      if (!entry) return false;
-      if (!entry.expires) return true;
-      const today = new Date().toISOString().slice(0, 10);
-      return entry.expires >= today;
+    lastSentTitle = title;
+    lastSentArtist = artist;
+    lastSentArt = artUrl;
+
+    const workerUrl = "https://radiohistoryworker.sthelensliveradio.workers.dev/update";
+    const url =
+      workerUrl +
+      `?title=${encodeURIComponent(title)}` +
+      `&artist=${encodeURIComponent(artist || "")}` +
+      `&art=${encodeURIComponent(artUrl || "")}`;
+
+    fetch(url).catch(() => {});
+  }
+
+  function showFallback() {
+    artworkEl.classList.add("fade");
+    setTimeout(() => {
+      artworkEl.src = FALLBACK_ART;
+      artworkEl.classList.remove("fade");
+    }, 200);
+    fallbackChip.style.display = "none";
+  }
+
+  async function updateArtwork(title, artist) {
+    const query = encodeURIComponent(title.trim());
+
+    if (!query) {
+      showFallback();
+      sendHistoryUpdate(title, artist, FALLBACK_ART);
+      return;
     }
 
-    function createUnlicensedView() {
-      const wrap = document.createElement("div");
-      wrap.className = "player-wrap";
+    try {
+      const res = await fetch(
+        `https://itunes.apple.com/search?term=${query}&entity=song&limit=1`
+      );
+      const data = await res.json();
 
-      const card = document.createElement("div");
-      card.className = "unlicensed";
+      let finalArt = FALLBACK_ART;
 
-      const title = document.createElement("div");
-      title.className = "unlicensed-title";
-      title.textContent = "Unlicensed Player";
+      if (data.results && data.results.length > 0) {
+        let art = data.results[0].artworkUrl100;
+        art = art.replace("100x100bb.jpg", "1200x1200bb.jpg");
+        finalArt = art;
 
-      const sub = document.createElement("div");
-      sub.className = "unlicensed-sub";
-      sub.textContent =
-        "This embedded player is not licensed. Please contact the provider for a valid license key.";
-
-      card.appendChild(title);
-      card.appendChild(sub);
-      wrap.appendChild(card);
-      return wrap;
-    }
-
-    function createPlayerView(theme, align) {
-      const wrap = document.createElement("div");
-      wrap.className = "player-wrap";
-      wrap.style.justifyContent =
-        align === "left"
-          ? "flex-start"
-          : align === "right"
-          ? "flex-end"
-          : "center";
-
-      const card = document.createElement("div");
-      card.className = "player-card";
-      if (theme === "light") card.classList.add("light");
-
-      const artwork = document.createElement("div");
-      artwork.className = "artwork";
-      const artImg = document.createElement("img");
-      artImg.src = DEFAULT_ARTWORK;
-      artImg.alt = "Artwork";
-      artwork.appendChild(artImg);
-
-      const meta = document.createElement("div");
-      meta.className = "meta";
-
-      const nowLabel = document.createElement("div");
-      nowLabel.className = "now-playing-label";
-      nowLabel.textContent = "Now Playing";
-
-      const titleEl = document.createElement("div");
-      titleEl.className = "track-title";
-      titleEl.textContent = DEFAULT_TITLE;
-
-      const artistEl = document.createElement("div");
-      artistEl.className = "track-artist";
-      artistEl.textContent = DEFAULT_ARTIST;
-
-      const controlsRow = document.createElement("div");
-      controlsRow.className = "controls-row";
-
-      const playBtn = document.createElement("button");
-      playBtn.className = "play-button";
-      const playIcon = document.createElement("div");
-      playIcon.className = "play-icon";
-      playBtn.appendChild(playIcon);
-
-      const progressBar = document.createElement("div");
-      progressBar.className = "progress-bar";
-      const progressFill = document.createElement("div");
-      progressFill.className = "progress-fill";
-      progressBar.appendChild(progressFill);
-
-      controlsRow.appendChild(playBtn);
-      controlsRow.appendChild(progressBar);
-
-      const statusText = document.createElement("div");
-      statusText.className = "status-text";
-      statusText.textContent = "Ready";
-
-      meta.appendChild(nowLabel);
-      meta.appendChild(titleEl);
-      meta.appendChild(artistEl);
-      meta.appendChild(controlsRow);
-      meta.appendChild(statusText);
-
-      card.appendChild(artwork);
-      card.appendChild(meta);
-      wrap.appendChild(card);
-
-      return {
-        root: wrap,
-        artImg,
-        titleEl,
-        artistEl,
-        playBtn,
-        progressFill,
-        statusText
-      };
-    }
-
-    function parseShoutcastXml(text) {
-      try {
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(text, "text/xml");
-        const songNode =
-          doc.querySelector("SONGTITLE") ||
-          doc.querySelector("songtitle") ||
-          doc.querySelector("title");
-        if (!songNode || !songNode.textContent) return null;
-        const raw = songNode.textContent.trim();
-        if (!raw) return null;
-
-        let artist = "";
-        let title = raw;
-        const dashIndex = raw.indexOf(" - ");
-        if (dashIndex > 0) {
-          artist = raw.slice(0, dashIndex).trim();
-          title = raw.slice(dashIndex + 3).trim();
+        if (artworkEl.src !== art) {
+          artworkEl.classList.add("fade");
+          setTimeout(() => {
+            artworkEl.src = art;
+            artworkEl.classList.remove("fade");
+          }, 200);
         }
 
-        return {
-          artist: artist || "",
-          title: title || raw
-        };
-      } catch (e) {
-        console.error("XML parse error:", e);
-        return null;
+        fallbackChip.style.display = "none";
+      } else {
+        showFallback();
       }
+
+      sendHistoryUpdate(title, artist, finalArt);
+
+    } catch {
+      showFallback();
+      sendHistoryUpdate(title, artist, FALLBACK_ART);
     }
+  }
 
-    async function fetchMetadata(metaUrl) {
-      if (!metaUrl) return null;
-      try {
-        const res = await fetch(
-          metaUrl + (metaUrl.includes("?") ? "&" : "?") + "t=" + Date.now(),
-          { cache: "no-store" }
-        );
-        const contentType = res.headers.get("content-type") || "";
-        const text = await res.text();
+  async function fetchMetadata() {
+    try {
+      const res = await fetch(metaURL + "?_=" + Date.now());
+      const data = await res.json();
 
-        if (contentType.includes("application/json")) {
-          try {
-            const json = JSON.parse(text);
-            const artist =
-              json.artist || json.Artist || json.artist_name || "";
-            const title =
-              json.title || json.Title || json.track || json.song || "";
-            return { artist, title };
-          } catch {
-            // fall through
-          }
-        }
+      let source = data.icestats && data.icestats.source;
+      if (Array.isArray(source)) source = source[0];
+      source = source || {};
 
-        return parseShoutcastXml(text);
-      } catch (e) {
-        console.error("Metadata fetch error:", e);
-        return null;
-      }
-    }
+      let raw = source.title || "";
 
-    async function fetchArtwork(artist, title) {
-      if (!artist && !title) return null;
-      try {
-        const query = encodeURIComponent(`${artist} ${title}`.trim());
-        const res = await fetch(
-          `https://itunes.apple.com/search?term=${query}&entity=song&limit=1`
-        );
-        if (!res.ok) return null;
-        const data = await res.json();
-        if (!data.results || !data.results.length) return null;
-        const art = data.results[0].artworkUrl100 || "";
-        if (!art) return null;
-        return art.replace("100x100bb", "300x300bb");
-      } catch (e) {
-        console.error("Artwork fetch error:", e);
-        return null;
-      }
-    }
-
-    function setupAudio(streamUrl, ui) {
-      if (!streamUrl) {
-        ui.statusText.textContent =
-          "No stream URL configured. Please provide a valid streamUrl parameter.";
-        ui.playBtn.disabled = true;
-        ui.playBtn.style.opacity = "0.6";
+      if (!raw.trim()) {
+        titleEl.textContent = "Live Stream";
+        subEl.textContent = "";
+        showFallback();
         return;
       }
 
-      const audio = new Audio(streamUrl);
-      audio.preload = "none";
+      const cleanTitle = raw.trim();
 
-      let isPlaying = false;
-      let progress = 0;
-      let progressTimer = null;
+      titleEl.textContent = cleanTitle;
+      subEl.textContent = "";
 
-      function setPlayIcon() {
-        ui.playBtn.innerHTML = "";
-        const icon = document.createElement("div");
-        icon.className = "play-icon";
-        ui.playBtn.appendChild(icon);
-      }
+      updateArtwork(cleanTitle, "");
 
-      function setPauseIcon() {
-        ui.playBtn.innerHTML = "";
-        const icon = document.createElement("div");
-        icon.className = "pause-icon";
-        const bar1 = document.createElement("span");
-        const bar2 = document.createElement("span");
-        icon.appendChild(bar1);
-        icon.appendChild(bar2);
-        ui.playBtn.appendChild(icon);
-      }
-
-      setPlayIcon();
-
-      function startProgress() {
-        if (progressTimer) return;
-        progressTimer = setInterval(() => {
-          progress = (progress + 1) % 100;
-          ui.progressFill.style.width = progress + "%";
-        }, 800);
-      }
-
-      function stopProgress() {
-        if (progressTimer) {
-          clearInterval(progressTimer);
-          progressTimer = null;
-        }
-        ui.progressFill.style.width = "0%";
-        progress = 0;
-      }
-
-      ui.playBtn.addEventListener("click", async () => {
-        if (!isPlaying) {
-          try {
-            ui.statusText.textContent = "Connecting…";
-            await audio.play();
-            isPlaying = true;
-            setPauseIcon();
-            ui.statusText.textContent = "Live";
-            startProgress();
-          } catch (e) {
-            console.error("Play error:", e);
-            ui.statusText.textContent = "Playback failed.";
-          }
-        } else {
-          audio.pause();
-          isPlaying = false;
-          setPlayIcon();
-          ui.statusText.textContent = "Paused";
-          stopProgress();
-        }
-      });
-
-      audio.addEventListener("error", () => {
-        ui.statusText.textContent = "Stream error.";
-      });
+    } catch {
+      titleEl.textContent = "Live Stream";
+      subEl.textContent = "";
+      showFallback();
     }
+  }
 
-    async function init() {
-      const params = getQueryParams();
-      const app = document.getElementById("app");
+  if (metaURL) {
+    fetchMetadata();
+    setInterval(fetchMetadata, 5000);
+  } else {
+    titleEl.textContent = "Live Stream";
+    subEl.textContent = "";
+    showFallback();
+  }
+}
 
-      const licenses = await loadLicenses();
-      const valid = isLicenseValid(licenses, params.licenseKey);
+checkLicense().then(valid => {
+  if (valid) initPlayer();
+});
+</script>
 
-      if (!valid) {
-        app.appendChild(createUnlicensedView());
-        return;
-      }
-
-      const ui = createPlayerView(params.theme, params.align);
-      app.appendChild(ui.root);
-
-      setupAudio(params.streamUrl, ui);
-
-      async function updateMeta() {
-        const meta = await fetchMetadata(params.metaUrl);
-        if (!meta || (!meta.artist && !meta.title)) {
-          ui.titleEl.textContent = DEFAULT_TITLE;
-          ui.artistEl.textContent = DEFAULT_ARTIST;
-          ui.statusText.textContent = "Live";
-          ui.artImg.src = DEFAULT_ARTWORK;
-          return;
-        }
-
-        ui.titleEl.textContent = meta.title || DEFAULT_TITLE;
-        ui.artistEl.textContent = meta.artist || DEFAULT_ARTIST;
-        ui.statusText.textContent = "Live";
-
-        const art = await fetchArtwork(meta.artist, meta.title);
-        ui.artImg.src = art || DEFAULT_ARTWORK;
-      }
-
-      updateMeta();
-      setInterval(updateMeta, 15000);
-    }
-
-    init();
-  </script>
 </body>
 </html>
