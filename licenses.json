@@ -1,0 +1,14 @@
+{
+  "validKeys": [
+    {
+      "key": "AQRT-DJAT-1045",
+      "station": "Test",
+      "expires": "2026-12-31"
+    },
+    {
+      "key": "VJKQ-FIAR-3816",
+      "station": "Radioworks Demo",
+      "expires": "2030-01-01"
+    }
+  ]
+}
