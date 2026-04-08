@@ -88,7 +88,6 @@
       line-height: 1.2;
       word-break: break-word;
       color: var(--title-color);
-      text-transform: none;
     }
 
     .play-btn {
@@ -102,12 +101,10 @@
       cursor: pointer;
       background: #fff;
       color: #000;
-      transition: background 0.2s ease, color 0.2s ease;
     }
 
     .play-btn.active {
       background: #e5e5e5;
-      color: #000;
     }
 
     .volume-wrap {
@@ -139,12 +136,6 @@
       border-radius: 50%;
       background: var(--slider-thumb);
       margin-top: -4px;
-      transition: box-shadow 0.15s ease, transform 0.15s ease;
-    }
-
-    .volume-bar::-webkit-slider-thumb:hover {
-      box-shadow: 0 0 0 6px var(--slider-thumb-glow);
-      transform: scale(1.05);
     }
 
     .powered-by {
@@ -209,76 +200,70 @@ async function checkLicense() {
     const res = await fetch(licenseURL + "?_=" + Date.now());
     const data = await res.json();
 
-    if (!data.licenses || !Array.isArray(data.licenses)) return showInvalid("data");
+    if (!data.licenses || !Array.isArray(data.licenses)) return showInvalid();
 
     const license = data.licenses.find(l => l.key === licenseKey);
-    if (!license) return showInvalid("invalid");
+    if (!license) return showInvalid();
 
     if (license.expires !== "never") {
       const today = new Date();
       const expiry = new Date(license.expires);
-      if (today > expiry) return showInvalid("expired");
+      if (today > expiry) return showInvalid();
     }
 
     return true;
 
   } catch {
-    return showInvalid("data");
+    return showInvalid();
   }
 }
 
-function showInvalid(reason) {
-  let title = "";
-  let message = "";
-
-  if (reason === "expired") {
-    title = "License Expired";
-    message = `The license for the Radioworks Premium Player has expired. Renew your licence at 
-      <a href="https://radioworks.studio" target="_blank" style="color:#4da3ff;">radioworks.studio</a>.`;
-  } else {
-    title = "Invalid License";
-    message = "This Radioworks Premium Player is not licensed.";
-  }
-
+function showInvalid() {
   document.getElementById("playerArea").innerHTML = `
-    <div style="width:100%;text-align:center;padding:40px 20px;color:#fff;">
-      <h1 style="font-size:24px;margin-bottom:10px;">${title}</h1>
-      <p style="font-size:14px;opacity:0.7;">${message}</p>
+    <div style="text-align:center;padding:40px;color:#fff;">
+      <h1>Invalid License</h1>
+      <p>Player not licensed.</p>
     </div>
   `;
-
   return false;
 }
 
 function initPlayer() {
   const audio = new Audio(streamURL);
-  audio.type = "audio/aacp";
-
   const playButton = document.getElementById("playButton");
   const volumeBar = document.getElementById("volumeBar");
   const titleEl = document.getElementById("trackTitle");
   const artworkEl = document.getElementById("artwork");
 
   const FALLBACK_ART = "https://i.ibb.co/Jj588RKm/Live-Stream-Default-Album-Art.png";
-
   artworkEl.src = FALLBACK_ART;
 
+  // ✅ BUTTON CLICK
   playButton.addEventListener("click", async () => {
     if (audio.paused) {
       try {
         await audio.play();
-        playButton.classList.add("active");
       } catch (err) {
         console.log("Playback blocked:", err);
       }
     } else {
       audio.pause();
       audio.currentTime = 0;
-      playButton.classList.remove("active");
     }
   });
 
-  audio.volume = volumeBar ? volumeBar.value / 100 : 1.0;
+  // ✅ KEEP BUTTON IN SYNC
+  audio.addEventListener("play", () => {
+    playButton.textContent = "STOP";
+    playButton.classList.add("active");
+  });
+
+  audio.addEventListener("pause", () => {
+    playButton.textContent = "PLAY";
+    playButton.classList.remove("active");
+  });
+
+  audio.volume = volumeBar ? volumeBar.value / 100 : 1;
 
   if (volumeBar) {
     volumeBar.addEventListener("input", () => {
@@ -287,26 +272,13 @@ function initPlayer() {
   }
 
   async function updateArtwork(title) {
-    if (!title) {
-      artworkEl.src = FALLBACK_ART;
-      return;
-    }
-
     try {
-      const res = await fetch(
-        `https://itunes.apple.com/search?term=${encodeURIComponent(title)}&entity=song&limit=1`
-      );
+      const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(title)}&limit=1`);
       const data = await res.json();
 
       if (data.results && data.results.length > 0) {
-        let art = data.results[0].artworkUrl100;
-        art = art.replace("100x100bb.jpg", "1200x1200bb.jpg");
-
-        artworkEl.classList.add("fade");
-        setTimeout(() => {
-          artworkEl.src = art;
-          artworkEl.classList.remove("fade");
-        }, 200);
+        let art = data.results[0].artworkUrl100.replace("100x100bb.jpg", "1200x1200bb.jpg");
+        artworkEl.src = art;
       } else {
         artworkEl.src = FALLBACK_ART;
       }
@@ -320,38 +292,18 @@ function initPlayer() {
       const res = await fetch(metaURL + "?_=" + Date.now());
       const data = await res.json();
 
-      let title = "";
+      let title = data.icestats?.source?.title || "";
+      titleEl.textContent = title || "Live Stream";
 
-      if (data.icestats && data.icestats.source) {
-        const src = Array.isArray(data.icestats.source)
-          ? data.icestats.source[0]
-          : data.icestats.source;
-
-        title = src.title || "";
-      }
-
-      if (!title) {
-        titleEl.textContent = "Live Stream";
-        artworkEl.src = FALLBACK_ART;
-        return;
-      }
-
-      titleEl.textContent = title;
       updateArtwork(title);
-
-    } catch (err) {
-      console.log("Metadata error:", err);
+    } catch {
       titleEl.textContent = "Live Stream";
-      artworkEl.src = FALLBACK_ART;
     }
   }
 
   if (metaURL) {
     fetchMetadata();
     setInterval(fetchMetadata, 5000);
-  } else {
-    titleEl.textContent = "Live Stream";
-    artworkEl.src = FALLBACK_ART;
   }
 }
 
