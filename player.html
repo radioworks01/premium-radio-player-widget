@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Radioworks Premium Player</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: transparent;
+      color: #fff;
+    }
+
+    .unlicensed {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      background: #000;
+      color: #fff;
+      width: 100%;
+      height: 100vh;
+      padding: 10px;
+      box-sizing: border-box;
+      font-size: 14px;
+    }
+
+    /* Player wrapper */
+    .player {
+      display: flex;
+      align-items: center;
+      padding: 14px;
+      box-sizing: border-box;
+      width: 100%;
+      height: 100vh;
+      position: relative;
+      border-radius: 14px;
+    }
+
+    /* Alignment */
+    .align-left { justify-content: flex-start; }
+    .align-center { justify-content: center; }
+    .align-right { justify-content: flex-end; }
+
+    /* Themes */
+    .theme-dark {
+      background: rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      color: #fff;
+    }
+    .theme-dark .track { color: #fff; }
+    .theme-dark .artist { color: #ddd; }
+    .theme-dark .footer { color: rgba(255, 255, 255, 0.7); }
+    .theme-dark .footer a { color: rgba(255, 255, 255, 0.9); }
+
+    .theme-light {
+      background: rgba(255, 255, 255, 0.55);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(0, 0, 0, 0.15);
+      color: #000;
+    }
+    .theme-light .track { color: #000; }
+    .theme-light .artist { color: #333; }
+    .theme-light .footer { color: rgba(0, 0, 0, 0.6); }
+    .theme-light .footer a { color: rgba(0, 0, 0, 0.8); }
+    .theme-light .play-btn {
+      background: #1db954;
+      color: #000;
+    }
+
+    .artwork {
+      width: 80px;
+      height: 80px;
+      background: #333;
+      border-radius: 6px;
+      overflow: hidden;
+      flex-shrink: 0;
+      margin-right: 12px;
+    }
+
+    .artwork img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      opacity: 1;
+      transition: opacity 0.5s ease;
+    }
+    .artwork img.fade-out {
+      opacity: 0;
+    }
+
+    .info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-width: 0;
+    }
+
+    .track,
+    .artist {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .track {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .artist {
+      font-size: 13px;
+      margin-top: 2px;
+    }
+
+    .controls {
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .play-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: none;
+      background: #1db954;
+      color: #000;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .volume {
+      flex: 1;
+    }
+
+    .volume input[type="range"] {
+      width: 100%;
+    }
+
+    /* Fade for text */
+    .fade {
+      opacity: 1;
+      transition: opacity 0.4s ease;
+    }
+    .fade.hidden {
+      opacity: 0;
+    }
+
+    /* Marquee */
+    .marquee {
+      overflow: hidden;
+      white-space: nowrap;
+      position: relative;
+    }
+    .marquee span {
+      display: inline-block;
+      padding-left: 100%;
+      animation: marquee 10s linear infinite;
+    }
+    .no-scroll span {
+      animation: none;
+      padding-left: 0;
+    }
+    @keyframes marquee {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-100%); }
+    }
+
+    /* Footer */
+    .footer {
+      position: absolute;
+      bottom: 6px;
+      left: 0;
+      width: 100%;
+      text-align: center;
+      font-size: 10px;
+      pointer-events: auto;
+    }
+    .footer a {
+      text-decoration: none;
+    }
+    .footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* Mobile compact mode + hide volume */
+    @media (max-width: 600px) {
+      .player { padding: 10px; }
+      .artwork { width: 60px; height: 60px; }
+      .track { font-size: 14px; }
+      .artist { font-size: 12px; }
+      .volume { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script>
+    const DEFAULT_ART = "https://i.ibb.co/zTXzXnxR/Default-Player-Artwork.png";
+    const DEFAULT_META = "RADIO STREAM";
+
+    function getQueryParam(name) {
+      const params = new URLSearchParams(window.location.search);
+      return params.get(name);
+    }
+
+    async function fetchJSON(url) {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Network error");
+      return res.json();
+    }
+
+    function normalize(str) {
+      return (str || "")
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g, "")
+        .trim();
+    }
+
+    function scoreMatch(targetArtist, targetTrack, result) {
+      const a = normalize(targetArtist);
+      const t = normalize(targetTrack);
+      const ra = normalize(result.artistName);
+      const rt = normalize(result.trackName);
+
+      let score = 0;
+      if (a && ra) {
+        if (a === ra) score += 2;
+        else if (ra.includes(a) || a.includes(ra)) score += 1;
+      }
+      if (t && rt) {
+        if (t === rt) score += 2;
+        else if (rt.includes(t) || t.includes(rt)) score += 1;
+      }
+      return score;
+    }
+
+    async function findBestItunesArt(artist, track) {
+      if (!artist && !track) return null;
+      const term = encodeURIComponent(`${artist || ""} ${track || ""}`.trim());
+      const url = `https://itunes.apple.com/search?term=${term}&entity=song&limit=10`;
+
+      try {
+        const data = await fetchJSON(url);
+        if (!data.results || !data.results.length) return null;
+
+        let best = null;
+        let bestScore = -1;
+        for (const r of data.results) {
+          const s = scoreMatch(artist, track, r);
+          if (s > bestScore) {
+            bestScore = s;
+            best = r;
+          }
+        }
+        if (!best) return null;
+        return best.artworkUrl100.replace("100x100bb", "300x300bb");
+      } catch {
+        return null;
+      }
+    }
+
+    async function checkLicense(licenseKey) {
+      if (!licenseKey) return false;
+      try {
+        const licenses = await fetchJSON("licenses.json");
+        const now = new Date();
+        const match = (licenses.validKeys || []).find(k => k.key === licenseKey);
+        if (!match) return false;
+        if (match.expires) {
+          const exp = new Date(match.expires);
+          if (isNaN(exp.getTime()) || exp < now) return false;
+        }
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
+    function applyMarquee(el) {
+      const span = el.querySelector("span");
+      if (!span) return;
+      el.classList.add("no-scroll");
+      setTimeout(() => {
+        if (span.scrollWidth > el.clientWidth) {
+          el.classList.remove("no-scroll");
+        }
+      }, 50);
+    }
+
+    (async function init() {
+      const root = document.getElementById("root");
+
+      const streamUrl = getQueryParam("streamUrl");
+      const metaUrl = getQueryParam("metaUrl");
+      const licenseKey = getQueryParam("licenseKey");
+      const theme = (getQueryParam("theme") || "dark").toLowerCase();
+      const align = (getQueryParam("align") || "left").toLowerCase();
+
+      const licensed = await checkLicense(licenseKey);
+
+      if (!licensed) {
+        root.innerHTML = `
+          <div class="unlicensed">
+            <div>
+              <strong>This Premium Radio Player from Radioworks is unlicensed.</strong><br/>
+              To obtain a valid license please visit <strong>radioworks.studio</strong>.
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      if (!streamUrl) {
+        root.innerHTML = `
+          <div class="unlicensed">
+            <div>No stream URL configured. Please provide a valid <strong>streamUrl</strong> parameter.</div>
+          </div>
+        `;
+        return;
+      }
+
+      root.innerHTML = `
+        <div class="player">
+          <div class="artwork">
+            <img id="artworkImg" src="${DEFAULT_ART}" alt="Album Art" />
+          </div>
+          <div class="info">
+            <div class="track fade marquee" id="trackName"><span>${DEFAULT_META}</span></div>
+            <div class="artist fade marquee" id="artistName"><span></span></div>
+            <div class="controls">
+              <button class="play-btn" id="playBtn">▶</button>
+              <div class="volume">
+                <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="0.8" />
+              </div>
+            </div>
+          </div>
+          <div class="footer">
+            Powered by <a href="https://radioworks.studio" target="_blank">Radioworks</a>
+          </div>
+        </div>
+      `;
+
+      const playerEl = document.querySelector(".player");
+      if (theme === "light") playerEl.classList.add("theme-light");
+      else playerEl.classList.add("theme-dark");
+
+      if (align === "center") playerEl.classList.add("align-center");
+      else if (align === "right") playerEl.classList.add("align-right");
+      else playerEl.classList.add("align-left");
+
+      const audio = new Audio(streamUrl);
+      audio.volume = 0.8;
+      audio.preload = "none";
+
+      const playBtn = document.getElementById("playBtn");
+      const volumeSlider = document.getElementById("volumeSlider");
+      const trackNameEl = document.getElementById("trackName");
+      const artistNameEl = document.getElementById("artistName");
+      const artworkImg = document.getElementById("artworkImg");
+
+      playBtn.addEventListener("click", async () => {
+        if (audio.paused) {
+          try {
+            await audio.play();
+            playBtn.textContent = "⏸";
+          } catch {}
+        } else {
+          audio.pause();
+          playBtn.textContent = "▶";
+        }
+      });
+
+      volumeSlider.addEventListener("input", () => {
+        audio.volume = parseFloat(volumeSlider.value);
+      });
+
+      async function updateMetadata() {
+        if (!metaUrl) {
+          trackNameEl.querySelector("span").textContent = DEFAULT_META;
+          artistNameEl.querySelector("span").textContent = "";
+          artworkImg.src = DEFAULT_ART;
+          applyMarquee(trackNameEl);
+          applyMarquee(artistNameEl);
+          return;
+        }
+
+        try {
+          const meta = await fetchJSON(metaUrl);
+
+          const artist = meta.artist || meta.artistName || "";
+          const title = meta.title || meta.track || meta.song || "";
+
+          const finalTitle = title || DEFAULT_META;
+          const finalArtist = artist || "";
+
+          const elements = [trackNameEl, artistNameEl, artworkImg];
+          elements.forEach(el => el.classList.add("hidden"));
+
+          setTimeout(async () => {
+            trackNameEl.querySelector("span").textContent = finalTitle;
+            artistNameEl.querySelector("span").textContent = finalArtist;
+
+            applyMarquee(trackNameEl);
+            applyMarquee(artistNameEl);
+
+            let art = meta.artwork || meta.cover || meta.image || null;
+
+            if (!art && artist && title) {
+              art = await findBestItunesArt(artist, title);
+            }
+
+            if (!art) art = DEFAULT_ART;
+
+            artworkImg.classList.add("fade-out");
+            setTimeout(() => {
+              artworkImg.src = art;
+              artworkImg.onload = () => {
+                artworkImg.classList.remove("fade-out");
+              };
+            }, 300);
+
+            elements.forEach(el => el.classList.remove("hidden"));
+          }, 400);
+
+        } catch {
+          trackNameEl.querySelector("span").textContent = DEFAULT_META;
+          artistNameEl.querySelector("span").textContent = "";
+          artworkImg.src = DEFAULT_ART;
+
+          applyMarquee(trackNameEl);
+          applyMarquee(artistNameEl);
+        }
+      }
+
+      updateMetadata();
+      if (metaUrl) setInterval(updateMetadata, 15000);
+    })();
+  </script>
+</body>
+</html>
