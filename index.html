@@ -136,6 +136,12 @@
       border-radius: 50%;
       background: var(--slider-thumb);
       margin-top: -4px;
+      transition: box-shadow 0.15s ease, transform 0.15s ease;
+    }
+
+    .volume-bar::-webkit-slider-thumb:hover {
+      box-shadow: 0 0 0 6px var(--slider-thumb-glow);
+      transform: scale(1.05);
     }
 
     .powered-by {
@@ -220,9 +226,9 @@ async function checkLicense() {
 
 function showInvalid() {
   document.getElementById("playerArea").innerHTML = `
-    <div style="text-align:center;padding:40px;color:#fff;">
-      <h1>Invalid License</h1>
-      <p>Player not licensed.</p>
+    <div style="width:100%;text-align:center;padding:40px 20px;color:#fff;">
+      <h1 style="font-size:24px;margin-bottom:10px;">Invalid License</h1>
+      <p style="font-size:14px;opacity:0.7;">This Radioworks Premium Player is not licensed.</p>
     </div>
   `;
   return false;
@@ -230,6 +236,8 @@ function showInvalid() {
 
 function initPlayer() {
   const audio = new Audio(streamURL);
+  audio.type = "audio/aacp";
+
   const playButton = document.getElementById("playButton");
   const volumeBar = document.getElementById("volumeBar");
   const titleEl = document.getElementById("trackTitle");
@@ -238,7 +246,6 @@ function initPlayer() {
   const FALLBACK_ART = "https://i.ibb.co/Jj588RKm/Live-Stream-Default-Album-Art.png";
   artworkEl.src = FALLBACK_ART;
 
-  // ✅ BUTTON CLICK
   playButton.addEventListener("click", async () => {
     if (audio.paused) {
       try {
@@ -252,7 +259,6 @@ function initPlayer() {
     }
   });
 
-  // ✅ KEEP BUTTON IN SYNC
   audio.addEventListener("play", () => {
     playButton.textContent = "STOP";
     playButton.classList.add("active");
@@ -263,7 +269,7 @@ function initPlayer() {
     playButton.classList.remove("active");
   });
 
-  audio.volume = volumeBar ? volumeBar.value / 100 : 1;
+  audio.volume = volumeBar ? volumeBar.value / 100 : 1.0;
 
   if (volumeBar) {
     volumeBar.addEventListener("input", () => {
@@ -271,21 +277,76 @@ function initPlayer() {
     });
   }
 
-  async function updateArtwork(title) {
+  // 🧠 Artwork helpers
+  function cleanTitle(title) {
+    return title
+      .replace(/\(.*?\)/g, "")
+      .replace(/\[.*?\]/g, "")
+      .replace(/feat\.?.*/i, "")
+      .replace(/ft\.?.*/i, "")
+      .replace(/-/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function splitArtistTrack(title) {
+    const parts = title.split(" - ");
+    if (parts.length >= 2) {
+      return {
+        artist: parts[0].trim(),
+        track: parts.slice(1).join(" ").trim()
+      };
+    }
+    return { artist: "", track: title };
+  }
+
+  async function searchiTunes(term) {
     try {
-      const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(title)}&limit=1`);
+      const res = await fetch(
+        `https://itunes.apple.com/search?term=${encodeURIComponent(term)}&entity=song&limit=1`
+      );
       const data = await res.json();
 
       if (data.results && data.results.length > 0) {
-        let art = data.results[0].artworkUrl100.replace("100x100bb.jpg", "1200x1200bb.jpg");
-        artworkEl.src = art;
-      } else {
-        artworkEl.src = FALLBACK_ART;
+        return data.results[0].artworkUrl100.replace("100x100bb.jpg", "1200x1200bb.jpg");
       }
-    } catch {
-      artworkEl.src = FALLBACK_ART;
-    }
+    } catch {}
+
+    return null;
   }
+
+  async function updateArtwork(title) {
+    if (!title) {
+      artworkEl.src = FALLBACK_ART;
+      return;
+    }
+
+    const cleaned = cleanTitle(title);
+    const { artist, track } = splitArtistTrack(title);
+
+    let art = await searchiTunes(cleaned);
+
+    if (!art && artist && track) {
+      art = await searchiTunes(`${artist} ${track}`);
+    }
+
+    if (!art && track) {
+      art = await searchiTunes(track);
+    }
+
+    if (!art) {
+      artworkEl.src = FALLBACK_ART;
+      return;
+    }
+
+    artworkEl.classList.add("fade");
+    setTimeout(() => {
+      artworkEl.src = art;
+      artworkEl.classList.remove("fade");
+    }, 200);
+  }
+
+  let lastTitle = "";
 
   async function fetchMetadata() {
     try {
@@ -293,17 +354,32 @@ function initPlayer() {
       const data = await res.json();
 
       let title = data.icestats?.source?.title || "";
-      titleEl.textContent = title || "Live Stream";
 
-      updateArtwork(title);
-    } catch {
+      if (!title) {
+        titleEl.textContent = "Live Stream";
+        artworkEl.src = FALLBACK_ART;
+        return;
+      }
+
+      if (title !== lastTitle) {
+        titleEl.textContent = title;
+        updateArtwork(title);
+        lastTitle = title;
+      }
+
+    } catch (err) {
+      console.log("Metadata error:", err);
       titleEl.textContent = "Live Stream";
+      artworkEl.src = FALLBACK_ART;
     }
   }
 
   if (metaURL) {
     fetchMetadata();
     setInterval(fetchMetadata, 5000);
+  } else {
+    titleEl.textContent = "Live Stream";
+    artworkEl.src = FALLBACK_ART;
   }
 }
 
