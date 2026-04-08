@@ -1,14 +1,16 @@
 {
-  "validKeys": [
+  "licenses": [
     {
-      "key": "ABC123",
-      "station": "Test",
-      "expires": "2026-12-31"
+      "key": "A7FQ-9M2K-L8D3-XR5P",
+      "expires": "never"
     },
     {
-      "key": "VJKQ-FIAR-3816",
-      "station": "Radioworks Demo",
-      "expires": "2030-01-01"
+      "key": "Q4M9-ZK2A-7LXF-D8P3",
+      "expires": "2026-03-19"
+    },
+    {
+      "key": "A7F3-9K2D-X8M4-Q1Z6",
+      "expires": "2026-03-19"
     }
   ]
 }
