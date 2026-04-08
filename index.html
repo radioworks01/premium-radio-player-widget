@@ -10,75 +10,12 @@
     :root {
       --text: #fff;
       --subtext: rgba(255,255,255,0.7);
-      --glass: rgba(0,0,0,0.25);
+      --glass: rgba(0,0,0,0.45);
       --title-color: #fff;
       --slider-track: linear-gradient(90deg, #ffffff 0%, #d0d0d0 100%);
       --slider-thumb: #ffffff;
       --slider-thumb-glow: rgba(255,255,255,0.6);
     }
-
-    /* ----------------------------- */
-    /* THEMES                       */
-    /* ----------------------------- */
-
-    /* LIGHT (default) */
-    .theme-light {
-      --text: #ffffff;
-      --subtext: rgba(255,255,255,0.7);
-      --glass: rgba(255,255,255,0.15);
-      --title-color: #ffffff;
-      --slider-track: linear-gradient(90deg, #ffffff 0%, #d0d0d0 100%);
-      --slider-thumb: #ffffff;
-      --slider-thumb-glow: rgba(255,255,255,0.6);
-    }
-
-    /* DARK */
-    .theme-dark {
-      --text: #000000;
-      --subtext: rgba(0,0,0,0.6);
-      --glass: rgba(255,255,255,0.25);
-      --title-color: #000000;
-      --slider-track: linear-gradient(90deg, #444 0%, #222 100%);
-      --slider-thumb: #000000;
-      --slider-thumb-glow: rgba(0,0,0,0.4);
-    }
-
-    .theme-dark .widget-wrap {
-      background: rgba(255,255,255,0.4);
-    }
-
-    /* RETRO */
-    .theme-retro {
-      --text: #3b2f2f;
-      --subtext: rgba(59,47,47,0.7);
-      --glass: rgba(222,184,135,0.35);
-      --title-color: #3b2f2f;
-      --slider-track: linear-gradient(90deg, #a67c52 0%, #8b5e34 100%);
-      --slider-thumb: #5c3d2e;
-      --slider-thumb-glow: rgba(92,61,46,0.4);
-    }
-
-    .theme-retro .widget-wrap {
-      background: rgba(222,184,135,0.45);
-      border: 2px solid #8b5e34;
-      border-radius: 16px;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.4);
-    }
-
-    .theme-retro .art-wrap {
-      border-radius: 4px;
-      box-shadow: 0 6px 14px rgba(0,0,0,0.5);
-    }
-
-    .theme-retro .play-btn {
-      background: #8b5e34;
-      color: #fff;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.4);
-    }
-
-    /* ----------------------------- */
-    /* ORIGINAL STYLES              */
-    /* ----------------------------- */
 
     body {
       margin: 0;
@@ -89,17 +26,23 @@
       color: var(--text);
     }
 
+    /* ----------------------------- */
+    /* DARK FROSTED GLASS STYLE     */
+    /* ----------------------------- */
+
     .widget-wrap {
       display: flex;
       flex-direction: row;
       align-items: center;
-      gap: 18px;
-      padding: 12px 16px;
+      gap: 16px;
+      padding: 14px 18px;
       background: var(--glass);
-      backdrop-filter: blur(12px);
-      border-radius: 12px;
-      max-width: 480px;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-radius: 14px;
+      max-width: 460px;
       margin: 0;
+      border: 1px solid rgba(255,255,255,0.08);
     }
 
     .align-left { margin-right: auto; }
@@ -107,13 +50,12 @@
     .align-right { margin-left: auto; }
 
     .art-wrap {
-      width: 150px;
-      height: 150px;
-      border-radius: 12px;
+      width: 120px;
+      height: 120px;
+      border-radius: 10px;
       overflow: hidden;
-      position: relative;
       flex-shrink: 0;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+      background: #222;
     }
 
     .art-img {
@@ -124,8 +66,6 @@
     }
 
     .art-img.fade { opacity: 0; }
-
-    .fallback-chip { display: none; }
 
     .meta-wrap {
       display: flex;
@@ -147,17 +87,12 @@
     .onair-label span { color: #ff9c35; }
 
     .track-title {
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 700;
-      text-transform: uppercase;
       line-height: 1.2;
       word-break: break-word;
       color: var(--title-color);
-    }
-
-    .track-sub {
-      font-size: 12px;
-      color: var(--subtext);
+      text-transform: none;
     }
 
     .play-btn {
@@ -171,10 +106,24 @@
       cursor: pointer;
       background: #fff;
       color: #000;
-      box-shadow: 0 6px 14px rgba(0,0,0,0.3);
+      transition: background 0.2s ease, color 0.2s ease;
     }
 
-    .volume-wrap { width: 100%; max-width: 160px; }
+    .play-btn.active {
+      background: #e5e5e5;
+      color: #000;
+    }
+
+    /* Desktop-only volume slider */
+    .volume-wrap {
+      width: 100%;
+      max-width: 160px;
+      display: none;
+    }
+
+    @media (min-width: 1025px) {
+      .volume-wrap { display: block; }
+    }
 
     .volume-bar {
       width: 100%;
@@ -204,7 +153,7 @@
     }
 
     .powered-by {
-      margin-top: 6px;
+      margin-top: 4px;
       font-size: 11px;
       opacity: 0.85;
     }
@@ -213,19 +162,12 @@
       color: #4da3ff;
       text-decoration: underline;
       font-weight: 600;
-      cursor: pointer;
     }
-
-    @media (max-width: 1024px) { .volume-wrap { display: none; } }
 
     @media (max-width: 480px) {
       .widget-wrap { flex-direction: column; max-width: 100%; padding: 16px; }
-      .art-wrap { width: 180px; height: 180px; }
+      .art-wrap { width: 160px; height: 160px; }
       .meta-wrap { align-items: center; text-align: center; }
-    }
-
-    @media screen and (min-width: 1025px) {
-      .volume-wrap { display: block !important; }
     }
   </style>
 </head>
@@ -236,14 +178,12 @@
 
   <div class="art-wrap">
     <img id="artwork" class="art-img" src="" alt="">
-    <div id="fallbackChip" class="fallback-chip">NO ARTWORK</div>
   </div>
 
   <div class="meta-wrap">
     <div class="onair-label"><span>●</span> NOW PLAYING</div>
 
     <div id="trackTitle" class="track-title">Loading…</div>
-    <div id="trackSub" class="track-sub"></div>
 
     <button id="playButton" class="play-btn">PLAY</button>
 
@@ -252,7 +192,7 @@
     </div>
 
     <div class="powered-by">
-      <a href="https://radioworks.stuio" target="_blank">Powered by Radioworks</a>
+      <a href="https://radioworks.studio" target="_blank">Powered by Radioworks</a>
     </div>
   </div>
 
@@ -264,10 +204,8 @@ const streamURL = params.get("stream");
 const metaURL = params.get("meta");
 const licenseKey = params.get("license");
 const align = params.get("align") || "center";
-const theme = params.get("theme") || "light";
 
-/* Apply theme */
-document.body.classList.add(`theme-${theme}`);
+document.getElementById("playerArea").classList.add(`align-${align}`);
 
 const licenseURL = "https://raw.githubusercontent.com/radioworks01/premium-radio-player-widget/main/licenses.json";
 
@@ -317,36 +255,42 @@ function showInvalid(reason) {
   return false;
 }
 
+function parseShoutcastXML(text) {
+  try {
+    const parser = new DOMParser();
+    const xml = parser.parseFromString(text, "text/xml");
+    const node = xml.querySelector("SONGTITLE") || xml.querySelector("songtitle");
+    if (!node) return "";
+    return node.textContent.trim();
+  } catch {
+    return "";
+  }
+}
+
 function initPlayer() {
   const audio = new Audio(streamURL);
   const playButton = document.getElementById("playButton");
   const volumeBar = document.getElementById("volumeBar");
   const titleEl = document.getElementById("trackTitle");
-  const subEl = document.getElementById("trackSub");
   const artworkEl = document.getElementById("artwork");
-  const fallbackChip = document.getElementById("fallbackChip");
 
   const FALLBACK_ART = "https://i.ibb.co/Jj588RKm/Live-Stream-Default-Album-Art.png";
 
-  let lastSentTitle = "";
-  let lastSentArtist = "";
-  let lastSentArt = "";
-
-  document.getElementById("playerArea").classList.add(`align-${align}`);
-
   artworkEl.src = FALLBACK_ART;
-  fallbackChip.style.display = "none";
 
+  /* PLAY / STOP behaviour */
   playButton.addEventListener("click", () => {
     if (audio.paused) {
       audio.play();
-      playButton.textContent = "PAUSE";
+      playButton.classList.add("active");
     } else {
       audio.pause();
-      playButton.textContent = "PLAY";
+      audio.currentTime = 0;
+      playButton.classList.remove("active");
     }
   });
 
+  /* Desktop-only volume */
   audio.volume = volumeBar ? volumeBar.value / 100 : 1.0;
 
   if (volumeBar) {
@@ -355,112 +299,61 @@ function initPlayer() {
     });
   }
 
-  function sendHistoryUpdate(title, artist, artUrl) {
-    if (!title) return;
-
-    if (
-      title === lastSentTitle &&
-      artist === lastSentArtist &&
-      artUrl === lastSentArt
-    ) {
-      return;
-    }
-
-    lastSentTitle = title;
-    lastSentArtist = artist;
-    lastSentArt = artUrl;
-
-    const workerUrl = "https://radiohistoryworker.sthelensliveradio.workers.dev/update";
-    const url =
-      workerUrl +
-      `?title=${encodeURIComponent(title)}` +
-      `&artist=${encodeURIComponent(artist || "")}` +
-      `&art=${encodeURIComponent(artUrl || "")}`;
-
-    fetch(url).catch(() => {});
-  }
-
-  function showFallback() {
-    artworkEl.classList.add("fade");
-    setTimeout(() => {
+  async function updateArtwork(title) {
+    if (!title) {
       artworkEl.src = FALLBACK_ART;
-      artworkEl.classList.remove("fade");
-    }, 200);
-    fallbackChip.style.display = "none";
-  }
-
-  async function updateArtwork(title, artist) {
-    const query = encodeURIComponent(title.trim());
-
-    if (!query) {
-      showFallback();
-      sendHistoryUpdate(title, artist, FALLBACK_ART);
       return;
     }
 
     try {
       const res = await fetch(
-        `https://itunes.apple.com/search?term=${query}&entity=song&limit=1`
+        `https://itunes.apple.com/search?term=${encodeURIComponent(title)}&entity=song&limit=1`
       );
       const data = await res.json();
-
-      let finalArt = FALLBACK_ART;
 
       if (data.results && data.results.length > 0) {
         let art = data.results[0].artworkUrl100;
         art = art.replace("100x100bb.jpg", "1200x1200bb.jpg");
-        finalArt = art;
 
-        if (artworkEl.src !== art) {
-          artworkEl.classList.add("fade");
-          setTimeout(() => {
-            artworkEl.src = art;
-            artworkEl.classList.remove("fade");
-          }, 200);
-        }
-
-        fallbackChip.style.display = "none";
+        artworkEl.classList.add("fade");
+        setTimeout(() => {
+          artworkEl.src = art;
+          artworkEl.classList.remove("fade");
+        }, 200);
       } else {
-        showFallback();
+        artworkEl.src = FALLBACK_ART;
       }
-
-      sendHistoryUpdate(title, artist, finalArt);
-
     } catch {
-      showFallback();
-      sendHistoryUpdate(title, artist, FALLBACK_ART);
+      artworkEl.src = FALLBACK_ART;
     }
   }
 
   async function fetchMetadata() {
     try {
       const res = await fetch(metaURL + "?_=" + Date.now());
-      const data = await res.json();
+      const text = await res.text();
 
-      let source = data.icestats && data.icestats.source;
-      if (Array.isArray(source)) source = source[0];
-      source = source || {};
+      let raw = "";
 
-      let raw = source.title || "";
+      if (text.trim().startsWith("<")) {
+        raw = parseShoutcastXML(text);
+      } else {
+        const json = JSON.parse(text);
+        raw = json.title || json.song || "";
+      }
 
-      if (!raw.trim()) {
+      if (!raw) {
         titleEl.textContent = "Live Stream";
-        subEl.textContent = "";
-        showFallback();
+        artworkEl.src = FALLBACK_ART;
         return;
       }
 
-      const cleanTitle = raw.trim();
-
-      titleEl.textContent = cleanTitle;
-      subEl.textContent = "";
-
-      updateArtwork(cleanTitle, "");
+      titleEl.textContent = raw;
+      updateArtwork(raw);
 
     } catch {
       titleEl.textContent = "Live Stream";
-      subEl.textContent = "";
-      showFallback();
+      artworkEl.src = FALLBACK_ART;
     }
   }
 
@@ -469,8 +362,7 @@ function initPlayer() {
     setInterval(fetchMetadata, 5000);
   } else {
     titleEl.textContent = "Live Stream";
-    subEl.textContent = "";
-    showFallback();
+    artworkEl.src = FALLBACK_ART;
   }
 }
 
