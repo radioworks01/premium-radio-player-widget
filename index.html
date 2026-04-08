@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Radioworks Premium Player</title>
+  <title>Radioworks Player</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     * {
@@ -22,7 +22,7 @@
       color: #fff;
     }
 
-    .player-shell {
+    .player-wrap {
       display: flex;
       justify-content: center;
       width: 100%;
@@ -32,27 +32,25 @@
       display: flex;
       align-items: center;
       gap: 16px;
-      padding: 16px 18px;
-      border-radius: 18px;
-      background: rgba(15, 15, 20, 0.7);
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      max-width: 420px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      background: rgba(10, 10, 15, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      max-width: 380px;
       width: 100%;
       color: #fff;
     }
 
     .player-card.light {
-      background: rgba(255, 255, 255, 0.7);
+      background: rgba(245, 245, 245, 0.96);
       color: #111;
       border-color: rgba(0, 0, 0, 0.06);
     }
 
     .artwork {
-      width: 72px;
-      height: 72px;
-      border-radius: 14px;
+      width: 64px;
+      height: 64px;
+      border-radius: 10px;
       overflow: hidden;
       flex-shrink: 0;
       background: #222;
@@ -78,7 +76,7 @@
 
     .now-playing-label {
       font-size: 10px;
-      letter-spacing: 0.12em;
+      letter-spacing: 0.16em;
       text-transform: uppercase;
       opacity: 0.7;
     }
@@ -107,8 +105,8 @@
     }
 
     .play-button {
-      width: 34px;
-      height: 34px;
+      width: 32px;
+      height: 32px;
       border-radius: 999px;
       border: none;
       display: flex;
@@ -118,24 +116,25 @@
       background: #ffffff;
       color: #111;
       flex-shrink: 0;
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+      font-size: 0;
       transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease, color 0.12s ease;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
     }
 
     .player-card.light .play-button {
       background: #111;
       color: #fff;
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
     }
 
     .play-button:hover {
       transform: translateY(-1px);
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.4);
     }
 
     .play-button:active {
       transform: translateY(0);
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
     }
 
     .play-icon {
@@ -161,9 +160,9 @@
 
     .progress-bar {
       flex: 1;
-      height: 4px;
+      height: 3px;
       border-radius: 999px;
-      background: rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.16);
       overflow: hidden;
       position: relative;
     }
@@ -179,12 +178,13 @@
       bottom: 0;
       width: 0%;
       border-radius: inherit;
-      background: linear-gradient(90deg, #ff4b8b, #ffb347);
+      background: #ffffff;
+      opacity: 0.9;
       transition: width 0.15s linear;
     }
 
     .status-text {
-      margin-top: 4px;
+      margin-top: 3px;
       font-size: 10px;
       opacity: 0.7;
       white-space: nowrap;
@@ -192,14 +192,12 @@
       text-overflow: ellipsis;
     }
 
-    .unlicensed-screen {
-      padding: 18px 20px;
-      border-radius: 18px;
-      background: rgba(20, 0, 0, 0.8);
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
-      border: 1px solid rgba(255, 80, 80, 0.5);
-      max-width: 420px;
+    .unlicensed {
+      padding: 14px 16px;
+      border-radius: 14px;
+      background: rgba(30, 0, 0, 0.95);
+      border: 1px solid rgba(255, 80, 80, 0.6);
+      max-width: 380px;
       width: 100%;
       color: #ffd7d7;
       font-size: 13px;
@@ -207,19 +205,19 @@
 
     .unlicensed-title {
       font-weight: 600;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
       font-size: 14px;
     }
 
     .unlicensed-sub {
       font-size: 12px;
-      opacity: 0.85;
+      opacity: 0.9;
     }
 
-    @media (max-width: 480px) {
+    @media (max-width: 420px) {
       .player-card,
-      .unlicensed-screen {
-        margin: 8px;
+      .unlicensed {
+        margin: 6px;
       }
     }
   </style>
@@ -228,8 +226,7 @@
   <div id="app"></div>
 
   <script>
-    const DEFAULT_ARTWORK =
-      "https://i.ibb.co/zTXzXnxR/Default-Player-Artwork.png";
+    const DEFAULT_ARTWORK = "https://i.ibb.co/zTXzXnxR/Default-Player-Artwork.png";
     const DEFAULT_TITLE = "Radio Stream";
     const DEFAULT_ARTIST = "Live";
 
@@ -265,11 +262,11 @@
     }
 
     function createUnlicensedView() {
-      const wrapper = document.createElement("div");
-      wrapper.className = "player-shell";
+      const wrap = document.createElement("div");
+      wrap.className = "player-wrap";
 
       const card = document.createElement("div");
-      card.className = "unlicensed-screen";
+      card.className = "unlicensed";
 
       const title = document.createElement("div");
       title.className = "unlicensed-title";
@@ -278,18 +275,18 @@
       const sub = document.createElement("div");
       sub.className = "unlicensed-sub";
       sub.textContent =
-        "This embedded player is not licensed for use. Please contact the provider for a valid license key.";
+        "This embedded player is not licensed. Please contact the provider for a valid license key.";
 
       card.appendChild(title);
       card.appendChild(sub);
-      wrapper.appendChild(card);
-      return wrapper;
+      wrap.appendChild(card);
+      return wrap;
     }
 
     function createPlayerView(theme, align) {
-      const shell = document.createElement("div");
-      shell.className = "player-shell";
-      shell.style.justifyContent =
+      const wrap = document.createElement("div");
+      wrap.className = "player-wrap";
+      wrap.style.justifyContent =
         align === "left"
           ? "flex-start"
           : align === "right"
@@ -352,15 +349,14 @@
 
       card.appendChild(artwork);
       card.appendChild(meta);
-      shell.appendChild(card);
+      wrap.appendChild(card);
 
       return {
-        root: shell,
+        root: wrap,
         artImg,
         titleEl,
         artistEl,
         playBtn,
-        playIcon,
         progressFill,
         statusText
       };
@@ -399,9 +395,10 @@
     async function fetchMetadata(metaUrl) {
       if (!metaUrl) return null;
       try {
-        const res = await fetch(metaUrl + (metaUrl.includes("?") ? "&" : "?") + "t=" + Date.now(), {
-          cache: "no-store"
-        });
+        const res = await fetch(
+          metaUrl + (metaUrl.includes("?") ? "&" : "?") + "t=" + Date.now(),
+          { cache: "no-store" }
+        );
         const contentType = res.headers.get("content-type") || "";
         const text = await res.text();
 
@@ -414,7 +411,7 @@
               json.title || json.Title || json.track || json.song || "";
             return { artist, title };
           } catch {
-            // fall through to XML parsing
+            // fall through
           }
         }
 
