@@ -26,10 +26,6 @@
       color: var(--text);
     }
 
-    /* ----------------------------- */
-    /* DARK FROSTED GLASS STYLE     */
-    /* ----------------------------- */
-
     .widget-wrap {
       display: flex;
       flex-direction: row;
@@ -114,7 +110,6 @@
       color: #000;
     }
 
-    /* Desktop-only volume slider */
     .volume-wrap {
       width: 100%;
       max-width: 160px;
@@ -255,20 +250,10 @@ function showInvalid(reason) {
   return false;
 }
 
-function parseShoutcastXML(text) {
-  try {
-    const parser = new DOMParser();
-    const xml = parser.parseFromString(text, "text/xml");
-    const node = xml.querySelector("SONGTITLE") || xml.querySelector("songtitle");
-    if (!node) return "";
-    return node.textContent.trim();
-  } catch {
-    return "";
-  }
-}
-
 function initPlayer() {
   const audio = new Audio(streamURL);
+  audio.type = "audio/aacp";
+
   const playButton = document.getElementById("playButton");
   const volumeBar = document.getElementById("volumeBar");
   const titleEl = document.getElementById("trackTitle");
@@ -278,11 +263,14 @@ function initPlayer() {
 
   artworkEl.src = FALLBACK_ART;
 
-  /* PLAY / STOP behaviour */
-  playButton.addEventListener("click", () => {
+  playButton.addEventListener("click", async () => {
     if (audio.paused) {
-      audio.play();
-      playButton.classList.add("active");
+      try {
+        await audio.play();
+        playButton.classList.add("active");
+      } catch (err) {
+        console.log("Playback blocked:", err);
+      }
     } else {
       audio.pause();
       audio.currentTime = 0;
@@ -290,7 +278,6 @@ function initPlayer() {
     }
   });
 
-  /* Desktop-only volume */
   audio.volume = volumeBar ? volumeBar.value / 100 : 1.0;
 
   if (volumeBar) {
@@ -331,27 +318,29 @@ function initPlayer() {
   async function fetchMetadata() {
     try {
       const res = await fetch(metaURL + "?_=" + Date.now());
-      const text = await res.text();
+      const data = await res.json();
 
-      let raw = "";
+      let title = "";
 
-      if (text.trim().startsWith("<")) {
-        raw = parseShoutcastXML(text);
-      } else {
-        const json = JSON.parse(text);
-        raw = json.title || json.song || "";
+      if (data.icestats && data.icestats.source) {
+        const src = Array.isArray(data.icestats.source)
+          ? data.icestats.source[0]
+          : data.icestats.source;
+
+        title = src.title || "";
       }
 
-      if (!raw) {
+      if (!title) {
         titleEl.textContent = "Live Stream";
         artworkEl.src = FALLBACK_ART;
         return;
       }
 
-      titleEl.textContent = raw;
-      updateArtwork(raw);
+      titleEl.textContent = title;
+      updateArtwork(title);
 
-    } catch {
+    } catch (err) {
+      console.log("Metadata error:", err);
       titleEl.textContent = "Live Stream";
       artworkEl.src = FALLBACK_ART;
     }
